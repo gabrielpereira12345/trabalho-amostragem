@@ -1,0 +1,107 @@
+---
+title: "Lista de exercícios - Amostragem"
+author: "Gabriel de Jesus Pereira"
+format: html
+---
+
+## Pacotes
+
+```{r warning=FALSE}
+library(dplyr)
+library(knitr)
+library(ggplot2)
+```
+
+## Função para questões 3 e 4
+
+```{r}
+MetricasDados <- function(dados, N, xu = NA, tx = NA, alpha = 0.5) {
+  n <- nrow(dados)
+  B <-  mean(dados[[2]])/mean(dados[[1]])
+  se <- var(dados[[2]] - B*dados[[1]])
+  t <- qt(1 - alpha/2, df = n - 1)
+  tibble(
+    `Estimador média AAS` = mean(dados[[2]]),
+    `Variância média AAS` = (1 - n/N)*var(dados[[2]])/n,
+    `Estimador média razão` = B*xu,
+    `Variância média razão` = (1 - n/N)*(xu/mean(dados[[1]]))^2*se/n,
+    `Total AAS` = N*mean(dados[[2]]),
+    `Variância total AAS` = N^2*(1 - n/N)*var(dados[[2]])/n,
+    `Total razão` = B*tx,
+    `Variância total razão` = (1 - n/N)*(tx/mean(dados[[1]]))^2*se/n,
+    `IC para média AAS` = list(`Estimador média AAS` + c(-t * sqrt(`Variância média AAS`), t * sqrt(`Variância média AAS`))),
+    `IC para média razão` = list(`Estimador média razão` + c(-t * sqrt(`Variância média razão`), t * sqrt(`Variância média razão`))),
+    `IC para total AAS` = list(`Total AAS` + c(-t*sqrt(`Variância total AAS`), t*sqrt(`Variância total AAS`))),
+    `IC para total razão` = list(`Total razão` + c(-t*sqrt(`Variância total razão`), t*sqrt(`Variância total razão`)))
+  ) 
+}
+```
+
+## Questão 3
+
+```{r}
+# Banco de Dados
+
+Banco3 <- tibble(
+  X = c(12, 11, 8, 9, 11, 8, 7, 10, 12, 11, 6, 8, 10, 12, 9, 9, 7, 11, 9, 8),
+  Y = c(125, 119, 83, 85, 99, 117, 69, 133, 154, 168, 61, 80, 114, 147, 122, 106, 82, 88, 97, 99)
+                 )
+```
+
+### a)
+
+```{r}
+Banco3 |> 
+  ggplot() +
+  geom_point(aes(x = X, y = Y))
+```
+
+```{r}
+# Coeficiente de correlação
+
+kable(cor(Banco3))
+```
+
+### b), c) e d)
+
+```{r}
+df1 <- MetricasDados(Banco3, N = 1132, xu = 10) |> 
+  select_if(~ !any(is.na(.))) |>
+  select(-contains(c("total", "Variância")))
+kable(df1)
+```
+
+### e)
+
+### f)
+
+## Questão 4
+
+```{r}
+# Banco de dados para a questão 4
+Banco4 <- tibble(X = c(12, 30, 24, 24, 18, 30, 12, 6, 36, 42),
+                 Y = c(18, 42, 24, 36, 24, 36, 14, 10, 48, 54))
+```
+
+### a)
+
+```{r}
+Banco4 |>
+  ggplot() +
+  geom_point(aes(x = X, y = Y))
+```
+
+```{r}
+kable(cor(Banco4))
+```
+
+### b), c), d) e e)
+
+```{r}
+df2 <- MetricasDados(Banco4, N = 200, tx = 15600) |> 
+  select_if(~ !any(is.na(.))) |> 
+  select(-contains(c("média razão", "Total AAS", "total AAS")))
+kable(df2)
+```
+
+### f), g) e h)
